@@ -5,7 +5,6 @@ import { users } from "../users.js";
 import User from "../models/User.js";
 
 const router = Router();
-
 router.post("/login", (req, res, next) => {
   passport.authenticate("local", (err, user, info) => {
     console.log("유저정보");
@@ -59,7 +58,7 @@ router.put("/change-password", async (req, res) => {
       return res.status(401).json({ message: "Authentication failed" });
     }
     user.password = newPassword;
-    const savedUser = await newUser.save();
+    const savedUser = await user.save();
     if (!savedUser) {
       throw new Error("User save operation failed");
     }
@@ -69,16 +68,26 @@ router.put("/change-password", async (req, res) => {
   }
 });
 
-router.delete("/delete-account", (req, res) => {
-  const index = users.findIndex(
-    (user) => user.id === req.session.passport.user
-  );
-  if (index === -1) {
-    return res.status(404).json({ message: "Account not found" });
+router.delete("/delete-account", async (req, res) => {
+  try {
+    const user = await User.findOne({ username: req.user.username });
+    if (!user) {
+      return res.status(401).json({ message: "Authentication failed" });
+    }
+    await User.deleteOne({ username: req.user.username });
+    // 세션 지우기
+    req.logOut((err) => {
+      if (err) {
+        console.error("Error logging out:", err);
+        return res.status(500).json({ message: "Error logging out" });
+      }
+      res
+        .status(200)
+        .json({ message: "User deleted and logged out successfully" });
+    });
+    res.status(200).json({ message: "User deleted successfully" });
+  } catch (err) {
+    res.status(500).send("Internal server error");
   }
-  users.splice(index, 1);
-  req.logout();
-  res.status(200).json({ message: "Account deleted successfully" });
 });
-
 export default router;
