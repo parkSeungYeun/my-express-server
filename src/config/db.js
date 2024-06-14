@@ -1,3 +1,4 @@
+import { decodeBase64 } from "bcryptjs";
 import mongoose from "mongoose";
 
 // 비동기 처리를 위한 async 함수

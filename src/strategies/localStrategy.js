@@ -1,3 +1,4 @@
+// src/strategies/localStrategy.js
 import { Strategy as LocalStrategy } from "passport-local";
 import User from "../models/User.js";
 
